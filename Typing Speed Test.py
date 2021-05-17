@@ -1,10 +1,11 @@
 import pygame, random
 from pygame.locals import HWSURFACE, DOUBLEBUF, RESIZABLE
+from datetime import datetime
 
 pygame.init()
 
 global w, h
-w, h = 1000, 800
+w, h = 1000, 600
 win = pygame.display.set_mode((w, h), HWSURFACE | DOUBLEBUF | RESIZABLE)
 pygame.display.set_caption("Typing Speed Test")
 
@@ -13,12 +14,14 @@ font = pygame.font.SysFont('times new roman', 20, True)
 font_heading = pygame.font.SysFont('chiller', 50, True)
 
 run = True
+start = datetime.now().time()
 
 global para, line
 para = [""]
 line = 0
+wd = ""
 
-free_type = False
+text_mode = False
 
 with open("wordlist.txt", 'r') as wds:
     for w in wds:
@@ -44,49 +47,96 @@ def create_wdlist():
             color_code[i].append((100, 100, 100))
     return p
 
+
 paragraph = create_wdlist()
-wd = ""
-key = ""
-wdcount = 0
-typed_para = [""]
-typed_count = 0
+
+def Text_mode(key):
+    global line
+    if key == "backspace" and len(para[0]) > 0:
+        para[line] = para[line][:-1]
+        if len(para[line]) == 0 and line > 0:
+            line -= 1
+    if key == "space":
+        para[line] += " "
+
+    if len(key) == 1:#valid key
+        cur_word = para[line].split(" ")[-1]
+
+        if len(para[line] + cur_word) > 40:
+            para[line] = para[line][:-len(cur_word)]
+            para.append("")
+            line += 1
+            para[line] += cur_word
+
+        if len(para[line]) + 1 >= 40:
+            para.append("")
+            line += 1
+
+        para[line] += key
+        para[line] = para[line].upper()
 
 
-def typed(k):
-    global typed_count, typed_para, line
-    k = k.upper()
-    if typed_count >= len(paragraph[line]):
-        typed_para.append("")
-        typed_count = 0
-        line += 1
-    print(typed_count)
-    print(k, paragraph[line][typed_count])
-    if k == "SPACE":
-        k = " "
-    if k == paragraph[line][typed_count]:
-        typed_para[line] += k
-        typed_count += 1
+class Type_Speed():
+    def __init__(self):
+        self.wd_count = 0
+        self.wd = ""
+        self.List = [[]]
+        self.line = 0
+        self.prev_line = ""
+        self.prop = [[]]
+        self.wrong_letter = 0
+        self.time = ""
 
+    def form(self, k):
+        self.time = str(
+            datetime.combine(datetime.today(), datetime.now().time()) - datetime.combine(datetime.today(), start))[0:7]
 
-# def check(w):
-#     global wdcount, m_sent, line
-#     cur_line = paragraph[line]
-#
-#     w = cur_line.split(" ")[wdcount]
-#
-#     # if w == wd:
-#     #     print("match")
-#     # else:
-#     #     print(w, wd, "not matched")
-#
-#     if wdcount == cur_line.count(" "):
-#         line += 1
-#         wdcount = 0
-#     else:
-#         wdcount += 1
+        min = int(self.time[2:4])
+        sec = int(self.time[5:])
+        if self.List[self.line] == paragraph[self.line].split(" ")[:-1]:
+            self.List.append([])
+            self.prop.append([])
+            self.line += 1
+            self.wd_count = 0
+            self.prev_line = ""
+        if k == "space":
+            word = paragraph[self.line].split(" ")[self.wd_count]
+            self.List[self.line].append(word)
 
+            if len(self.List[self.line]) <= 1:
+                self.prev_line = ""
+            else:
+                self.prev_line += self.List[self.line][self.wd_count - 1] + " "
+            # print(self.prev_line, font.render(self.prev_line, 1, (0, 0, 0)).get_width(), self.List)
 
-def ___():
+            x = 0.2 * w + font.render(self.prev_line, 1, (0, 0, 0)).get_width()
+            y = 0.2 * h + 20 * self.line
+            if self.wd.upper() == word:
+                clr = (0, 200, 0)
+            else:
+                print(word, self.wd)
+                clr = (200, 0, 0)
+            self.prop[self.line].append([clr, (x, y)])
+            # print(self.prop)
+
+            self.wd = ""
+            self.wd_count += 1
+        elif k == "backspace":
+            self.wd = self.wd[:-1]
+        else:
+            self.wd += k
+
+    def draw(self):
+        for line in range(self.line + 1):
+            for wd in self.List[line]:
+                i = self.List[line].index(wd)
+                txt = font.render(wd, 1, self.prop[line][i][0])
+                win.blit(txt, self.prop[line][i][1])
+
+    def info(self):
+        pass
+
+def interface():
     global wd
     para_win = (0.2 * w, 0.2 * h, 0.8 * w - 0.2 * w, 200)
     text_box = (0.4 * w, 0.5 * h, 200, 100)
@@ -99,7 +149,7 @@ def ___():
         win.blit(txt, (0.2 * w, 0.2 * h + paragraph.index(line) * 20))
 
     txt = font.render(wd, 1, (0, 255, 0))
-    win.blit(txt, (text_box[0], text_box[1]))
+    win.blit(txt, text_box[:2])
 
 
 def refresh_win():
@@ -107,21 +157,34 @@ def refresh_win():
 
     txt = font_heading.render("TYPING SPEED TEST", 1, (200, 0, 200))
     win.blit(txt, (0.25 * w, 0.1 * h))
-    if free_type:
+
+    win.blit(font.render("Time Taken: " + type_speed.time, 1, (200, 200, 20)), (0, 0))
+
+    if text_mode:
         pygame.draw.rect(win, (200, 0, 0), (0.2 * w, 0.2 * h, 500, 500), 3)
-
         for Line in para:
-            txt = font.render(Line, 1, (0, 255, 0))
-            win.blit(txt, (0.2 * w, 0.2 * h + para.index(Line) * 20))
+            if para.index(Line) == line:
+                Line += "|"
+                txt = font.render(Line, 1, (0, 200, 100))
+                win.blit(txt, (0.2 * w, 0.2 * h + para.index(Line[:-1]) * 20))
+            else:
+                txt = font.render(Line, 1, (0, 200, 100))
+                win.blit(txt, (0.2 * w, 0.2 * h + para.index(Line) * 20))
 
-    if not free_type:
-        ___()
-        for l in typed_para:
-            txt = font.render(l, 1, (0, 0, 200))
-            win.blit(txt, (0.2 * w, 0.2 * h + typed_para.index(l ) * 20))
+    if not text_mode:
+        interface()
+        type_speed.draw()
+        # for wd in type_speed.List[type_speed.line]:
+        #     i = type_speed.List[type_speed.line].index(wd)
+        #     txt = font.render(wd, 1, type_speed.prop[type_speed.line][i][0])
+        #     win.blit(txt, type_speed.prop[type_speed.line][i][1])
 
     pygame.display.update()
 
+
+key = ""
+
+type_speed = Type_Speed()
 
 while run:
     clock.tick(20)
@@ -134,37 +197,20 @@ while run:
             pygame.display.set_mode(event.dict['size'], HWSURFACE | DOUBLEBUF | RESIZABLE)
         if event.type == pygame.KEYDOWN:
             key = str(pygame.key.name(event.key))
+
             if key == "tab":
-                if free_type:free_type = False
-                else: free_type = True
+                if text_mode:text_mode = False
+                else: text_mode = True
+
             if key == "escape":
                 run = False
-            if free_type:
-                if key == "backspace" and len(para[0]) > 0:
-                    para[line] = para[line][0:len(para[line]) - 1]
-                    if len(para[line]) == 0 and line > 0:
-                        line -= 1
-                if key == "space":
-                    para[line] += " "
-                if len(key) == 1:
-                    last_word = para[line].split(" ")[-1]
 
-                    if len(para[line] + last_word) > 40:
-                        para[line] = para[line][:-len(last_word)]
-                        para.append("")
-                        line += 1
-                        para[line] += last_word
-
-                    if len(para[line]) + 1 >= 40:
-                        para.append("")
-                        line += 1
-
-                    para[line] += key
-                    para[line] = para[line].upper()
+            if text_mode:
+                Text_mode(key)
             else:
-                typed(key)
+                type_speed.form(key)
                 if key == "space":
-                    # check(wd)
+                    print(wd, " ")
                     wd = ""
                 elif key == "backspace" and len(wd) > 0:
                     wd = wd[:-1]
