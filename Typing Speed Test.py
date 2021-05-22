@@ -14,7 +14,6 @@ font = pygame.font.SysFont('times new roman', 20, True)
 font_heading = pygame.font.SysFont('chiller', 50, True)
 
 run = True
-start = datetime.now().time()
 
 global para, line
 para = [""]
@@ -85,14 +84,11 @@ class Type_Speed():
         self.prev_line = ""
         self.prop = [[]]
         self.wrong_letter = 0
+        self.start = datetime.now().time()
         self.time = ""
+        self.count = {"correct": 0, "wrong": 0}
 
     def form(self, k):
-        self.time = str(
-            datetime.combine(datetime.today(), datetime.now().time()) - datetime.combine(datetime.today(), start))[0:7]
-
-        min = int(self.time[2:4])
-        sec = int(self.time[5:])
         if self.List[self.line] == paragraph[self.line].split(" ")[:-1]:
             self.List.append([])
             self.prop.append([])
@@ -113,11 +109,11 @@ class Type_Speed():
             y = 0.2 * h + 20 * self.line
             if self.wd.upper() == word:
                 clr = (0, 200, 0)
+                self.count["correct"] += 1
             else:
-                print(word, self.wd)
                 clr = (200, 0, 0)
+                self.count["wrong"] += 1
             self.prop[self.line].append([clr, (x, y)])
-            # print(self.prop)
 
             self.wd = ""
             self.wd_count += 1
@@ -133,13 +129,30 @@ class Type_Speed():
                 txt = font.render(wd, 1, self.prop[line][i][0])
                 win.blit(txt, self.prop[line][i][1])
 
-    def info(self):
-        pass
+    def calc(self):
+        self.time = str(
+            datetime.combine(datetime.today(), datetime.now().time()) - datetime.combine(datetime.today(), self.start))[0:7]
+
+        min = int(self.time[2:4])
+        sec = int(self.time[5:])
+
+        if sec == 5:
+            self.finished()
+
+    def finished(self):
+        while True:
+            txt1 = font.render("CORRECT WORDS:" + str(self.count["correct"]), 1, (0, 200, 0))
+            txt2 = font.render("WRONG WORDS:" + str(self.count["wrong"]), 1, (200, 0, 0))
+
+            win.blit(txt1, (0, 50))
+            win.blit(txt2, (0, 70))
+
+            self.__init__()
 
 def interface():
     global wd
     para_win = (0.2 * w, 0.2 * h, 0.8 * w - 0.2 * w, 200)
-    text_box = (0.4 * w, 0.5 * h, 200, 100)
+    text_box = (0.4 * w, 0.7 * h, 200, 50)
 
     pygame.draw.rect(win, (200, 0, 0), para_win, 2)
     pygame.draw.rect(win, (0, 200, 0), text_box, 2)
@@ -173,6 +186,7 @@ def refresh_win():
 
     if not text_mode:
         interface()
+        type_speed.calc()
         type_speed.draw()
         # for wd in type_speed.List[type_speed.line]:
         #     i = type_speed.List[type_speed.line].index(wd)
@@ -199,8 +213,11 @@ while run:
             key = str(pygame.key.name(event.key))
 
             if key == "tab":
-                if text_mode:text_mode = False
-                else: text_mode = True
+                if text_mode:
+                    text_mode = False
+                    type_speed.__init__()
+                else:
+                    text_mode = True
 
             if key == "escape":
                 run = False
@@ -210,7 +227,6 @@ while run:
             else:
                 type_speed.form(key)
                 if key == "space":
-                    print(wd, " ")
                     wd = ""
                 elif key == "backspace" and len(wd) > 0:
                     wd = wd[:-1]
