@@ -86,7 +86,7 @@ class Type_Speed():
         self.wrong_letter = 0
         self.start = datetime.now().time()
         self.time = ""
-        self.count = {"correct": 0, "wrong": 0}
+        self.analyze = {"correct": 0, "wrong": 0, "estimated speed" : 0}
 
     def form(self, k):
         if self.List[self.line] == paragraph[self.line].split(" ")[:-1]:
@@ -109,10 +109,10 @@ class Type_Speed():
             y = 0.2 * h + 20 * self.line
             if self.wd.upper() == word:
                 clr = (0, 200, 0)
-                self.count["correct"] += 1
+                self.analyze["correct"] += 1
             else:
                 clr = (200, 0, 0)
-                self.count["wrong"] += 1
+                self.analyze["wrong"] += 1
             self.prop[self.line].append([clr, (x, y)])
 
             self.wd = ""
@@ -140,14 +140,26 @@ class Type_Speed():
             self.finished()
 
     def finished(self):
-        while True:
-            txt1 = font.render("CORRECT WORDS:" + str(self.count["correct"]), 1, (0, 200, 0))
-            txt2 = font.render("WRONG WORDS:" + str(self.count["wrong"]), 1, (200, 0, 0))
+        self.analyze["estimated speed"] = self.analyze["correct"] + self.analyze["wrong"] / 2
+        i = 0
+        for k, v in self.analyze.items():
+            print(k, v)
+            i += 1
+            txt = font.render(k.upper() + " : " + str(v), 1, (0, 200, 0))
+            win.blit(txt, (0, 50 + i * 20))
+        win.blit(font.render("PRESS ANY KEY TO CONTINUE", 1, (0, 0, 200)), (0, 150))
+        pygame.display.update()
 
-            win.blit(txt1, (0, 50))
-            win.blit(txt2, (0, 70))
+        n = True
+        while n:
+            for event in pygame.event.get():
+                print(event)
+                if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                    n = False
+                clock.tick(5)
 
-            self.__init__()
+        pygame.time.delay(3000)
+        self.__init__()
 
 def interface():
     global wd
