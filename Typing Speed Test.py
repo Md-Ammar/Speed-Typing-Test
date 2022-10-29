@@ -16,13 +16,13 @@ font_heading = pygame.font.SysFont('chiller', 50, True)
 run = True
 
 global para, line
-para = [""]
+para = {}
 line = 0
 wd = ""
 
 text_mode = False
 
-with open("wordlist.txt", 'r') as wds:
+with open("data/wordlist.txt", 'r') as wds:
     for w in wds:
         wdlist = w.split("|")
 
@@ -49,6 +49,7 @@ def create_wdlist():
 
 paragraph = create_wdlist()
 
+
 def Text_mode(key):
     global line
     if key == "backspace" and len(para[0]) > 0:
@@ -58,7 +59,7 @@ def Text_mode(key):
     if key == "space":
         para[line] += " "
 
-    if len(key) == 1:#valid key
+    if len(key) == 1:  # valid key
         cur_word = para[line].split(" ")[-1]
 
         if len(para[line] + cur_word) > 40:
@@ -86,7 +87,7 @@ class Type_Speed():
         self.wrong_letter = 0
         self.start = datetime.now().time()
         self.time = ""
-        self.analyze = {"correct": 0, "wrong": 0, "estimated speed" : 0}
+        self.analyze = {"correct": 0, "wrong": 0, "estimated speed": 0}
 
     def form(self, k):
         if self.List[self.line] == paragraph[self.line].split(" ")[:-1]:
@@ -131,7 +132,8 @@ class Type_Speed():
 
     def calc(self):
         self.time = str(
-            datetime.combine(datetime.today(), datetime.now().time()) - datetime.combine(datetime.today(), self.start))[0:7]
+            datetime.combine(datetime.today(), datetime.now().time()) - datetime.combine(datetime.today(), self.start))[
+                    0:7]
 
         min = int(self.time[2:4])
         sec = int(self.time[5:])
@@ -160,6 +162,7 @@ class Type_Speed():
 
         pygame.time.delay(3000)
         self.__init__()
+
 
 def interface():
     global wd
