@@ -1,11 +1,12 @@
+import datetime as dt
+import os
+import random
+import sys
 from collections import defaultdict
 
-import pygame
-import random
-import os
-import sys
-import datetime as dt
 from pygame.locals import HWSURFACE, DOUBLEBUF, RESIZABLE
+
+from accessories import *
 
 pygame.init()
 
@@ -95,7 +96,7 @@ def display_graph():
     width = w - rel_x
     height = h - rel_y
 
-    pygame.draw.rect(win, (20, 20, 200), (rel_x, rel_y, width, height))
+    pygame.draw.rect(win, (255, 255, 255), (rel_x, rel_y, width, height))
     pygame.draw.rect(win, (200, 0, 0), (rel_x, rel_y, width, height), 2)
 
     graphpos = []
@@ -170,11 +171,11 @@ def status_bar():
     pygame.draw.rect(win, (0, 100, 100), (0, 0.6 * h, w, 0.4 * h), 2)
 
     if not start:
-        text = Font_status_bar.render("To Begin, Start Typing", True, (250, 200, 50))
-        win.blit(text, (0.5 * w - text.get_width() // 2, 0.8 * h))
+        # text = Font_status_bar.render("To Begin, start_button Typing", True, (250, 200, 50))
+        # win.blit(text, (0.5 * w - text.get_width() // 2, 0.8 * h))
         start_time = dt.datetime.now()
 
-        return None
+        # return None
 
     text = Font_status_bar.render(f"Correct: {evaluation['correct']}", True, (0, 255, 0))
     win.blit(text, (0.2 * w, 0.7 * h))
@@ -210,6 +211,7 @@ def redraw_window():
     pygame.draw.rect(win, (0, 0, 0), (0.1 * w, 0.1 * h, 0.8 * w, 0.4 * h), 3)
     display_text()
     status_bar()
+    start_button.draw()
 
     if start:
         if graph_gen_timer == 20 and time_elapsed.seconds != 0:
@@ -217,6 +219,7 @@ def redraw_window():
             graph_gen_timer = 0
         else:
             graph_gen_timer += 1
+        start_button.update_state(state="OFF")
 
     if key is not None and len(key) == 1:
         if para[line_no][letter_no] == key or (capitalize and para[line_no][letter_no] == key.upper()):
@@ -245,6 +248,7 @@ def redraw_window():
 
 
 run = True
+start_button = Button(win, 0.4 * w, 0.5 * h, "Start", "Reset", 30)
 while run:
     clock.tick(fps)
     key = None
@@ -258,7 +262,6 @@ while run:
             reset_screen()
         if event.type == pygame.KEYDOWN:
             key = str(pygame.key.name(event.key))
-
             start = True
 
             if key == "escape":
@@ -270,7 +273,17 @@ while run:
             if bool(key.count("shift")):
                 key = "shift"
                 capitalize = True
-
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = event.pos
+            if start_button.rect.collidepoint(pos):
+                if start:
+                    start = False
+                    start_button.update_state("ON")
+                    reset_screen()
+                else:
+                    start = True
+                    start_button.update_state("OFF")
+                # start, start_button.state = False, "OFF" if start else True, "ON"
             # print(key, end=', ')
 
     redraw_window()
