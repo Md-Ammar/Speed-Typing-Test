@@ -18,7 +18,8 @@ Font_heading = pygame.font.SysFont('algerian', 60)
 Font_text = pygame.font.SysFont('comic sans', 30)
 Font_status_bar = pygame.font.SysFont('jetbrains mono', 25)
 
-fps = 20
+fps = 30
+
 
 
 def init():
@@ -214,7 +215,7 @@ def redraw_window():
     start_button.draw()
 
     if start:
-        if graph_gen_timer == 20 and time_elapsed.seconds != 0:
+        if graph_gen_timer == fps and time_elapsed.seconds != 0:
             graph_list.append(evaluation['word_count'] / (time_elapsed.seconds / 60))
             graph_gen_timer = 0
         else:
@@ -263,13 +264,10 @@ while run:
         if event.type == pygame.KEYDOWN:
             key = str(pygame.key.name(event.key))
             start = True
-
             if key == "escape":
                 run = False
-
             if key == "space":
                 key = " "
-
             if bool(key.count("shift")):
                 key = "shift"
                 capitalize = True

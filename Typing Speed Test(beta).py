@@ -23,8 +23,8 @@ wd = ""
 text_mode = False
 
 with open("data/wordlist.txt", 'r') as wds:
-    for w in wds:
-        wdlist = w.split("|")
+    for wd in wds:
+        wdlist = wd.split("|")
 
 
 def create_wdlist():
